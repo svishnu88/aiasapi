@@ -4,7 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 import jarvis
-from jarvis.decorator import clear_registry
+from jarvis.decorator import _reset_registry
 from jarvis.exceptions import EndpointValidationError
 from jarvis.validator import (
     get_method_input_type,
@@ -31,7 +31,7 @@ class TestValidateIsJarvisApp:
     """Tests for validate_is_jarvis_app function."""
 
     def test_valid_app_class(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -54,7 +54,7 @@ class TestValidateHasEndpointMethods:
     """Tests for validate_has_endpoint_methods function."""
 
     def test_app_with_endpoints(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -65,7 +65,7 @@ class TestValidateHasEndpointMethods:
         validate_has_endpoint_methods(ValidApp)
 
     def test_app_without_endpoints(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class EmptyApp:
@@ -83,7 +83,7 @@ class TestValidateMethodTypeHints:
     """Tests for validate_method_type_hints function."""
 
     def test_valid_type_hints(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -97,7 +97,7 @@ class TestValidateMethodTypeHints:
         validate_method_type_hints(methods[0])
 
     def test_missing_input_type_hint(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -113,7 +113,7 @@ class TestValidateMethodTypeHints:
         assert "must have a type hint for input parameter" in str(exc_info.value)
 
     def test_missing_return_type_hint(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -129,7 +129,7 @@ class TestValidateMethodTypeHints:
         assert "must have a return type hint" in str(exc_info.value)
 
     def test_no_input_parameter(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -149,7 +149,7 @@ class TestValidateMethodInputIsPydanticModel:
     """Tests for validate_method_input_is_pydantic_model function."""
 
     def test_valid_pydantic_input(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -163,7 +163,7 @@ class TestValidateMethodInputIsPydanticModel:
         validate_method_input_is_pydantic_model(methods[0])
 
     def test_input_is_not_pydantic_model(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -179,7 +179,7 @@ class TestValidateMethodInputIsPydanticModel:
         assert "input type must be a Pydantic BaseModel subclass" in str(exc_info.value)
 
     def test_input_is_dict(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -199,7 +199,7 @@ class TestValidateMethodOutputIsPydanticModel:
     """Tests for validate_method_output_is_pydantic_model function."""
 
     def test_valid_pydantic_output(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -213,7 +213,7 @@ class TestValidateMethodOutputIsPydanticModel:
         validate_method_output_is_pydantic_model(methods[0])
 
     def test_output_is_not_pydantic_model(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -229,7 +229,7 @@ class TestValidateMethodOutputIsPydanticModel:
         assert "return type must be a Pydantic BaseModel subclass" in str(exc_info.value)
 
     def test_output_is_dict(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -249,7 +249,7 @@ class TestValidateNoDuplicatePaths:
     """Tests for validate_no_duplicate_paths function."""
 
     def test_unique_paths(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -268,7 +268,7 @@ class TestValidateNoDuplicatePaths:
         pass  # Method names are unique by Python rules
 
     def test_duplicate_custom_paths(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -289,7 +289,7 @@ class TestValidateApp:
     """Tests for the main validate_app function."""
 
     def test_valid_app(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -304,7 +304,7 @@ class TestValidateApp:
         validate_app(ValidApp)
 
     def test_valid_app_with_setup(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class ValidApp:
@@ -326,7 +326,7 @@ class TestValidateApp:
             validate_app(NotAnApp)
 
     def test_invalid_app_no_endpoints(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class EmptyApp:
@@ -336,7 +336,7 @@ class TestValidateApp:
             validate_app(EmptyApp)
 
     def test_invalid_app_bad_type_hints(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class InvalidApp:
@@ -352,7 +352,7 @@ class TestGetMethodTypes:
     """Tests for get_method_input_type and get_method_output_type functions."""
 
     def test_get_method_input_type(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class MyApp:
@@ -366,7 +366,7 @@ class TestGetMethodTypes:
         assert get_method_input_type(methods[0]) is Input
 
     def test_get_method_output_type(self):
-        clear_registry()
+        _reset_registry()
 
         @jarvis.app()
         class MyApp:
