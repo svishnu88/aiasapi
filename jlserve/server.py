@@ -1,4 +1,4 @@
-"""FastAPI server integration for Jarvis apps."""
+"""FastAPI server integration for JLServe apps."""
 
 from contextlib import asynccontextmanager
 from typing import Callable, Type
@@ -6,16 +6,16 @@ from typing import Callable, Type
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from jarvis.decorator import get_endpoint_methods
-from jarvis.exceptions import EndpointSetupError
-from jarvis.validator import get_method_input_type, get_method_output_type, validate_app
+from jlserve.decorator import get_endpoint_methods
+from jlserve.exceptions import EndpointSetupError
+from jlserve.validator import get_method_input_type, get_method_output_type, validate_app
 
 
 def create_app(app_cls: Type) -> FastAPI:
-    """Create a FastAPI app from a Jarvis app class.
+    """Create a FastAPI app from a JLServe app class.
 
     Args:
-        app_cls: The app class decorated with @jarvis.app().
+        app_cls: The app class decorated with @jlserve.app().
 
     Returns:
         A configured FastAPI application with routes for all endpoints.

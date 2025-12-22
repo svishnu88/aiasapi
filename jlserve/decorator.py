@@ -1,20 +1,20 @@
-"""Decorators for defining Jarvis apps and endpoints."""
+"""Decorators for defining JLServe apps and endpoints."""
 
 import functools
 from typing import Callable, Optional, Type
 
-from jarvis.exceptions import MultipleAppsError
+from jlserve.exceptions import MultipleAppsError
 
 # Track the single app class for this module
 _registered_app: Optional[Type] = None
 
 
 def app(name: Optional[str] = None, requirements: Optional[list[str]] = None):
-    """Decorator to mark a class as a Jarvis app.
+    """Decorator to mark a class as a JLServe app.
 
     The app can contain multiple endpoint methods decorated with @endpoint().
 
-    Only one @jarvis.app() class is allowed per module/deployment. This matches
+    Only one @jlserve.app() class is allowed per module/deployment. This matches
     ML inference use cases where a single model is loaded per deployment.
 
     Args:
@@ -36,7 +36,7 @@ def app(name: Optional[str] = None, requirements: Optional[list[str]] = None):
 
         if _registered_app is not None:
             raise MultipleAppsError(
-                f"Only one @jarvis.app() class is allowed per module. "
+                f"Only one @jlserve.app() class is allowed per module. "
                 f"Found existing app '{_registered_app.__name__}' and attempted to register '{cls.__name__}'. "
                 f"For ML inference use cases, deploy each model as a separate app."
             )
@@ -67,7 +67,7 @@ def app(name: Optional[str] = None, requirements: Optional[list[str]] = None):
 
 
 def endpoint(path: Optional[str] = None):
-    """Decorator to mark a method as a Jarvis endpoint.
+    """Decorator to mark a method as a JLServe endpoint.
 
     The endpoint path is automatically derived from the method name unless
     a custom path is provided.

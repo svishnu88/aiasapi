@@ -1,12 +1,12 @@
-"""Validation logic for Jarvis app classes."""
+"""Validation logic for JLServe app classes."""
 
 import inspect
 from typing import Callable, Type, get_type_hints
 
 from pydantic import BaseModel
 
-from jarvis.decorator import get_endpoint_methods
-from jarvis.exceptions import EndpointValidationError
+from jlserve.decorator import get_endpoint_methods
+from jlserve.exceptions import EndpointValidationError
 
 
 def validate_app(cls: Type) -> None:
@@ -25,14 +25,14 @@ def validate_app(cls: Type) -> None:
 
 
 def validate_is_jarvis_app(cls: Type) -> None:
-    """Check that the class is decorated with @jarvis.app().
+    """Check that the class is decorated with @jlserve.app().
 
     Raises:
-        EndpointValidationError: If the class is not a Jarvis app.
+        EndpointValidationError: If the class is not a JLServe app.
     """
     if not getattr(cls, "_jarvis_app", False):
         raise EndpointValidationError(
-            f"Class {cls.__name__} must be decorated with @jarvis.app()"
+            f"Class {cls.__name__} must be decorated with @jlserve.app()"
         )
 
 
@@ -45,7 +45,7 @@ def validate_has_endpoint_methods(cls: Type) -> None:
     methods = get_endpoint_methods(cls)
     if not methods:
         raise EndpointValidationError(
-            f"App {cls.__name__} must have at least one method decorated with @jarvis.endpoint()"
+            f"App {cls.__name__} must have at least one method decorated with @jlserve.endpoint()"
         )
 
 

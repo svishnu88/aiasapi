@@ -2,19 +2,19 @@
 
 import pytest
 
-import jarvis
-from jarvis.decorator import _reset_registry, get_endpoint_methods, get_registered_app
-from jarvis.exceptions import MultipleAppsError
+import jlserve
+from jlserve.decorator import _reset_registry, get_endpoint_methods, get_registered_app
+from jlserve.exceptions import MultipleAppsError
 
 
 class TestAppDecorator:
-    """Tests for the @jarvis.app() class decorator."""
+    """Tests for the @jlserve.app() class decorator."""
 
     def test_app_decorator_sets_jarvis_app_flag(self):
         """Test that the decorator sets _jarvis_app on the class."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
             pass
 
@@ -25,7 +25,7 @@ class TestAppDecorator:
         """Test that the decorator sets _jarvis_app_name to class name by default."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
             pass
 
@@ -36,7 +36,7 @@ class TestAppDecorator:
         """Test that the decorator accepts a custom name."""
         _reset_registry()
 
-        @jarvis.app(name="CustomName")
+        @jlserve.app(name="CustomName")
         class MyApp:
             pass
 
@@ -46,7 +46,7 @@ class TestAppDecorator:
         """Test that the decorator registers the class."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
             pass
 
@@ -57,16 +57,16 @@ class TestAppDecorator:
         """Test that multiple apps raise MultipleAppsError."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class FirstApp:
             pass
 
         with pytest.raises(MultipleAppsError) as exc_info:
-            @jarvis.app()
+            @jlserve.app()
             class SecondApp:
                 pass
 
-        assert "Only one @jarvis.app()" in str(exc_info.value)
+        assert "Only one @jlserve.app()" in str(exc_info.value)
         assert "FirstApp" in str(exc_info.value)
         assert "SecondApp" in str(exc_info.value)
 
@@ -74,7 +74,7 @@ class TestAppDecorator:
         """Test that the decorator returns the original class unchanged."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
             def helper(self):
                 return "hello"
@@ -86,7 +86,7 @@ class TestAppDecorator:
         """Test that the decorator accepts and stores requirements."""
         _reset_registry()
 
-        @jarvis.app(requirements=["torch", "transformers==4.35.0", "numpy>=1.24"])
+        @jlserve.app(requirements=["torch", "transformers==4.35.0", "numpy>=1.24"])
         class MyApp:
             pass
 
@@ -97,7 +97,7 @@ class TestAppDecorator:
         """Test that the decorator handles empty requirements list."""
         _reset_registry()
 
-        @jarvis.app(requirements=[])
+        @jlserve.app(requirements=[])
         class MyApp:
             pass
 
@@ -108,7 +108,7 @@ class TestAppDecorator:
         """Test that the decorator sets empty list when requirements not provided."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
             pass
 
@@ -119,7 +119,7 @@ class TestAppDecorator:
         """Test that the decorator accepts various pip version specifier formats."""
         _reset_registry()
 
-        @jarvis.app(
+        @jlserve.app(
             requirements=[
                 "torch",  # No version
                 "torch==2.0.0",  # Exact version
@@ -142,7 +142,7 @@ class TestAppDecorator:
         _reset_registry()
 
         with pytest.raises(ValueError) as exc_info:
-            @jarvis.app(requirements="torch")
+            @jlserve.app(requirements="torch")
             class MyApp:
                 pass
 
@@ -154,7 +154,7 @@ class TestAppDecorator:
         _reset_registry()
 
         with pytest.raises(ValueError) as exc_info:
-            @jarvis.app(requirements=["torch", 123, "numpy"])
+            @jlserve.app(requirements=["torch", 123, "numpy"])
             class MyApp:
                 pass
 
@@ -166,7 +166,7 @@ class TestAppDecorator:
         _reset_registry()
 
         with pytest.raises(ValueError) as exc_info:
-            @jarvis.app(requirements=["torch", "", "numpy"])
+            @jlserve.app(requirements=["torch", "", "numpy"])
             class MyApp:
                 pass
 
@@ -177,7 +177,7 @@ class TestAppDecorator:
         _reset_registry()
 
         with pytest.raises(ValueError) as exc_info:
-            @jarvis.app(requirements=["torch", "   ", "numpy"])
+            @jlserve.app(requirements=["torch", "   ", "numpy"])
             class MyApp:
                 pass
 
@@ -185,15 +185,15 @@ class TestAppDecorator:
 
 
 class TestEndpointDecorator:
-    """Tests for the @jarvis.endpoint() method decorator."""
+    """Tests for the @jlserve.endpoint() method decorator."""
 
     def test_endpoint_decorator_sets_flag(self):
         """Test that the decorator sets _jarvis_endpoint on the method."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def my_method(self):
                 pass
 
@@ -205,9 +205,9 @@ class TestEndpointDecorator:
         """Test that the decorator sets default path from method name."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def add(self):
                 pass
 
@@ -218,9 +218,9 @@ class TestEndpointDecorator:
         """Test that the decorator accepts a custom path."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint(path="/custom-path")
+            @jlserve.endpoint(path="/custom-path")
             def my_method(self):
                 pass
 
@@ -231,17 +231,17 @@ class TestEndpointDecorator:
         """Test that multiple methods can be decorated as endpoints."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def add(self):
                 pass
 
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def subtract(self):
                 pass
 
-            @jarvis.endpoint(path="/mult")
+            @jlserve.endpoint(path="/mult")
             def multiply(self):
                 pass
 
@@ -255,9 +255,9 @@ class TestEndpointDecorator:
         """Test that functools.wraps preserves method name."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def my_endpoint(self):
                 pass
 
@@ -268,9 +268,9 @@ class TestEndpointDecorator:
         """Test that functools.wraps preserves docstring."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def my_endpoint(self):
                 """This is my docstring."""
                 pass
@@ -282,9 +282,9 @@ class TestEndpointDecorator:
         """Test that non-decorated methods are not included."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
-            @jarvis.endpoint()
+            @jlserve.endpoint()
             def endpoint_method(self):
                 pass
 
@@ -306,7 +306,7 @@ class TestResetRegistry:
         """Test that _reset_registry clears the registered app."""
         _reset_registry()
 
-        @jarvis.app()
+        @jlserve.app()
         class MyApp:
             pass
 

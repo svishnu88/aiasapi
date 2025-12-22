@@ -38,8 +38,8 @@ def _is_jarvis_app_decorator(decorator: ast.expr) -> bool:
     """Check if decorator is @jarvis.app or @app.
 
     Handles both import styles:
-    - import jarvis; @jarvis.app(...)
-    - from jarvis import app; @app(...)
+    - import jlserve; @jarvis.app(...)
+    - from jlserve import app; @app(...)
 
     Args:
         decorator: AST node representing a decorator.
