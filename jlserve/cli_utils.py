@@ -15,6 +15,7 @@ These utilities handle the core workflow that both commands share:
 """
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -44,15 +45,19 @@ def validate_python_file(file: Path) -> None:
         raise typer.Exit(1)
 
 
-def install_requirements(file: Path) -> None:
+def install_requirements(file: Path, cache_dir: Path) -> None:
     """Extract and install requirements from a Python file.
 
     This function solves the chicken-and-egg problem: we need to install packages
     before importing the file, but the requirements are specified inside the file.
     Solution: use AST parsing to extract requirements without executing the code.
 
+    UV will use the cache_dir for caching downloaded packages, ensuring fast
+    reinstalls across container restarts.
+
     Args:
         file: Python file to extract requirements from.
+        cache_dir: Directory to use for UV package cache (UV_CACHE_DIR).
 
     Raises:
         typer.Exit: If extraction or installation fails.
@@ -72,9 +77,15 @@ def install_requirements(file: Path) -> None:
     if requirements:
         typer.echo(f"Installing requirements: {', '.join(requirements)}")
         try:
+            # Set UV_CACHE_DIR to use JLSERVE_CACHE_DIR for package caching
+            # This ensures packages are cached in persistent storage
+            env = os.environ.copy()
+            env["UV_CACHE_DIR"] = str(cache_dir)
+
             subprocess.run(
                 ["uv", "pip", "install", *requirements],
                 check=True,
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             typer.echo(f"Error: Failed to install requirements: {e}", err=True)

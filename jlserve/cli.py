@@ -34,9 +34,38 @@ def dev(
     # Validate file exists and is a Python file
     validate_python_file(file)
 
+    # Check that build was run (marker file exists in cache)
+    try:
+        cache_dir = get_jlserve_cache_dir()
+    except CacheConfigError as e:
+        typer.echo(f"Error: {e}", err=True)
+        typer.echo(
+            "\nPlease set JLSERVE_CACHE_DIR and run 'jlserve build' first:",
+            err=True,
+        )
+        typer.echo(f"  export JLSERVE_CACHE_DIR=/path/to/cache", err=True)
+        typer.echo(f"  jlserve build {file}", err=True)
+        raise typer.Exit(1)
+
+    marker_file = cache_dir / ".jlserve-build-complete"
+    if not marker_file.exists():
+        typer.echo(
+            f"Error: Build marker not found in {cache_dir}",
+            err=True,
+        )
+        typer.echo(
+            "\nThis suggests 'jlserve build' has not been run yet.",
+            err=True,
+        )
+        typer.echo("\nPlease run:", err=True)
+        typer.echo(f"  jlserve build {file}", err=True)
+        typer.echo("\nThen try again:", err=True)
+        typer.echo(f"  jlserve dev {file} --port {port}", err=True)
+        raise typer.Exit(1)
+
     # Extract and install any requirements specified in @jlserve.app(requirements=[...])
     # This happens before import to avoid chicken-and-egg problems
-    install_requirements(file)
+    install_requirements(file, cache_dir)
 
     # Import the file and get the @jlserve.app() decorated class
     app_cls = load_app_class(file)
@@ -91,7 +120,7 @@ def build(
         raise typer.Exit(1)
 
     # Extract and install requirements via AST parsing (before import)
-    install_requirements(file)
+    install_requirements(file, cache_dir)
 
     # Import the file and get the @jlserve.app() decorated class
     app_cls = load_app_class(file)
@@ -116,6 +145,9 @@ def build(
         typer.echo(f"Error: download_weights() failed: {e}", err=True)
         raise typer.Exit(1)
 
+    # Create marker file to indicate build completed successfully
+    marker_file = cache_dir / ".jlserve-build-complete"
+    marker_file.touch()
     typer.echo("✓ Build complete!")
 
 
