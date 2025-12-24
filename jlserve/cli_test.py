@@ -161,7 +161,7 @@ class Calculator:
 class TestDevCommandRequirements:
     """Tests for dev command with requirements parameter."""
 
-    @patch("jlserve.cli.subprocess.run")
+    @patch("jlserve.cli_utils.subprocess.run")
     @patch("jlserve.cli.uvicorn.run")
     def test_dev_installs_requirements(self, mock_uvicorn, mock_subprocess):
         """Test that dev command installs requirements before starting server."""
@@ -207,7 +207,7 @@ class MyModel:
         finally:
             Path(temp_path).unlink()
 
-    @patch("jlserve.cli.subprocess.run")
+    @patch("jlserve.cli_utils.subprocess.run")
     @patch("jlserve.cli.uvicorn.run")
     def test_dev_no_requirements_skips_install(self, mock_uvicorn, mock_subprocess):
         """Test that dev command skips install when no requirements specified."""
@@ -247,7 +247,7 @@ class MyModel:
         finally:
             Path(temp_path).unlink()
 
-    @patch("jlserve.cli.subprocess.run")
+    @patch("jlserve.cli_utils.subprocess.run")
     @patch("jlserve.cli.uvicorn.run")
     def test_dev_empty_requirements_skips_install(self, mock_uvicorn, mock_subprocess):
         """Test that dev command skips install when requirements list is empty."""
@@ -304,7 +304,7 @@ class MyModel:
         finally:
             Path(temp_path).unlink()
 
-    @patch("jlserve.cli.subprocess.run")
+    @patch("jlserve.cli_utils.subprocess.run")
     @patch("jlserve.cli.uvicorn.run")
     def test_dev_handles_subprocess_error(self, mock_uvicorn, mock_subprocess):
         """Test that dev command handles pip install failures."""
@@ -347,7 +347,7 @@ class MyModel:
         finally:
             Path(temp_path).unlink()
 
-    @patch("jlserve.cli.subprocess.run")
+    @patch("jlserve.cli_utils.subprocess.run")
     @patch("jlserve.cli.uvicorn.run")
     def test_dev_handles_uv_not_found(self, mock_uvicorn, mock_subprocess):
         """Test that dev command handles missing uv command."""
@@ -388,7 +388,7 @@ class MyModel:
         finally:
             Path(temp_path).unlink()
 
-    @patch("jlserve.cli.subprocess.run")
+    @patch("jlserve.cli_utils.subprocess.run")
     @patch("jlserve.cli.uvicorn.run")
     def test_dev_extracts_requirements_before_import(self, mock_uvicorn, mock_subprocess):
         """Test that requirements are extracted via AST before importing (chicken-and-egg fix)."""
@@ -433,5 +433,244 @@ class MyModel:
 
             # The key test: extraction happened via AST, not via import
             # If we had imported the file first, the commented imports would fail
+        finally:
+            Path(temp_path).unlink()
+
+
+class TestBuildCommand:
+    """Tests for build command."""
+
+    @patch("jlserve.cli_utils.subprocess.run")
+    @patch("jlserve.cli.get_jlserve_cache_dir")
+    def test_build_success(self, mock_cache_dir, mock_subprocess):
+        """Test that build command successfully downloads weights."""
+        # Setup mock cache directory
+        mock_cache_dir.return_value = Path("/tmp/cache")
+
+        # Create test app file
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
+            f.write("""
+import jlserve
+from pydantic import BaseModel
+
+class Input(BaseModel):
+    value: int
+
+class Output(BaseModel):
+    result: int
+
+@jlserve.app()
+class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        # Mock weight download
+        pass
+
+    @jlserve.endpoint()
+    def predict(self, input: Input) -> Output:
+        return Output(result=input.value * 2)
+""")
+            temp_path = f.name
+
+        try:
+            result = runner.invoke(app, ["build", temp_path])
+
+            # Verify success
+            assert result.exit_code == 0
+            assert "✓ Cache directory: /tmp/cache" in result.output
+            assert "✓ Loading app: MyModel" in result.output
+            assert "✓ Downloading weights..." in result.output
+            assert "✓ Build complete!" in result.output
+        finally:
+            Path(temp_path).unlink()
+
+    def test_build_file_not_found(self):
+        """Test that build command fails when file doesn't exist."""
+        result = runner.invoke(app, ["build", "nonexistent.py"])
+        assert result.exit_code == 1
+        assert "Error: File not found" in result.output
+
+    def test_build_file_must_be_python(self):
+        """Test that build command only accepts Python files."""
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False, mode="w") as f:
+            f.write("not python")
+            temp_path = f.name
+
+        try:
+            result = runner.invoke(app, ["build", temp_path])
+            assert result.exit_code == 1
+            assert "Error: File must be a Python file" in result.output
+        finally:
+            Path(temp_path).unlink()
+
+    @patch("jlserve.cli.get_jlserve_cache_dir")
+    def test_build_cache_dir_not_set(self, mock_cache_dir):
+        """Test that build command fails when JLSERVE_CACHE_DIR is not set."""
+        from jlserve.exceptions import CacheConfigError
+
+        # Mock cache_dir to raise error
+        mock_cache_dir.side_effect = CacheConfigError("JLSERVE_CACHE_DIR environment variable must be set")
+
+        # Create test app file
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
+            f.write("""
+import jlserve
+from pydantic import BaseModel
+
+class Input(BaseModel):
+    value: int
+
+class Output(BaseModel):
+    result: int
+
+@jlserve.app()
+class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
+    @jlserve.endpoint()
+    def predict(self, input: Input) -> Output:
+        return Output(result=input.value * 2)
+""")
+            temp_path = f.name
+
+        try:
+            result = runner.invoke(app, ["build", temp_path])
+            assert result.exit_code == 1
+            assert "JLSERVE_CACHE_DIR environment variable must be set" in result.output
+        finally:
+            Path(temp_path).unlink()
+
+    @patch("jlserve.cli_utils.subprocess.run")
+    @patch("jlserve.cli.get_jlserve_cache_dir")
+    def test_build_download_weights_fails(self, mock_cache_dir, mock_subprocess):
+        """Test that build command handles download_weights() failures."""
+        # Setup mock cache directory
+        mock_cache_dir.return_value = Path("/tmp/cache")
+
+        # Create test app file where download_weights raises error
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
+            f.write("""
+import jlserve
+from pydantic import BaseModel
+
+class Input(BaseModel):
+    value: int
+
+class Output(BaseModel):
+    result: int
+
+@jlserve.app()
+class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        raise RuntimeError("Network error downloading model")
+
+    @jlserve.endpoint()
+    def predict(self, input: Input) -> Output:
+        return Output(result=input.value * 2)
+""")
+            temp_path = f.name
+
+        try:
+            result = runner.invoke(app, ["build", temp_path])
+            assert result.exit_code == 1
+            assert "Error: download_weights() failed" in result.output
+            assert "Network error downloading model" in result.output
+        finally:
+            Path(temp_path).unlink()
+
+    @patch("jlserve.cli_utils.subprocess.run")
+    @patch("jlserve.cli.get_jlserve_cache_dir")
+    def test_build_installs_requirements(self, mock_cache_dir, mock_subprocess):
+        """Test that build command installs requirements before loading app."""
+        # Setup mock cache directory
+        mock_cache_dir.return_value = Path("/tmp/cache")
+
+        # Create test app file with requirements
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
+            f.write("""
+import jlserve
+from pydantic import BaseModel
+
+class Input(BaseModel):
+    value: int
+
+class Output(BaseModel):
+    result: int
+
+@jlserve.app(requirements=["torch", "numpy>=1.24"])
+class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
+    @jlserve.endpoint()
+    def predict(self, input: Input) -> Output:
+        return Output(result=input.value * 2)
+""")
+            temp_path = f.name
+
+        try:
+            result = runner.invoke(app, ["build", temp_path])
+            assert result.exit_code == 0
+
+            # Verify subprocess.run was called with correct args
+            mock_subprocess.assert_called_once()
+            call_args = mock_subprocess.call_args[0][0]
+            assert call_args[0] == "uv"
+            assert call_args[1] == "pip"
+            assert call_args[2] == "install"
+            assert "torch" in call_args
+            assert "numpy>=1.24" in call_args
+        finally:
+            Path(temp_path).unlink()
+
+    @patch("jlserve.cli_utils.subprocess.run")
+    @patch("jlserve.cli.get_jlserve_cache_dir")
+    def test_build_validates_app_structure(self, mock_cache_dir, mock_subprocess):
+        """Test that build command validates app structure."""
+        # Setup mock cache directory
+        mock_cache_dir.return_value = Path("/tmp/cache")
+
+        # Create test app file with missing download_weights
+        with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as f:
+            f.write("""
+import jlserve
+from pydantic import BaseModel
+
+class Input(BaseModel):
+    value: int
+
+class Output(BaseModel):
+    result: int
+
+@jlserve.app()
+class MyModel:
+    def setup(self) -> None:
+        pass
+
+    # Missing download_weights() method!
+
+    @jlserve.endpoint()
+    def predict(self, input: Input) -> Output:
+        return Output(result=input.value * 2)
+""")
+            temp_path = f.name
+
+        try:
+            result = runner.invoke(app, ["build", temp_path])
+            assert result.exit_code == 1
+            assert "Error: App validation failed" in result.output
+            assert "download_weights" in result.output.lower()
         finally:
             Path(temp_path).unlink()
