@@ -69,6 +69,12 @@ import jlserve
 
 @jlserve.app()
 class EmptyApp:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     pass
 """
             f.write(code)
@@ -116,6 +122,12 @@ class Output(BaseModel):
 
 @jlserve.app()
 class Calculator:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def add(self, input: Input) -> Output:
         return Output(result=input.value + 1)
@@ -166,6 +178,12 @@ class Output(BaseModel):
 
 @jlserve.app(requirements=["torch", "numpy>=1.24"])
 class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def predict(self, input: Input) -> Output:
         return Output(result=input.value * 2)
@@ -206,6 +224,12 @@ class Output(BaseModel):
 
 @jlserve.app()
 class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def predict(self, input: Input) -> Output:
         return Output(result=input.value * 2)
@@ -240,6 +264,12 @@ class Output(BaseModel):
 
 @jlserve.app(requirements=[])
 class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def predict(self, input: Input) -> Output:
         return Output(result=input.value * 2)
@@ -295,6 +325,12 @@ class Output(BaseModel):
 
 @jlserve.app(requirements=["nonexistent-package-xyz"])
 class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def predict(self, input: Input) -> Output:
         return Output(result=input.value * 2)
@@ -330,6 +366,12 @@ class Output(BaseModel):
 
 @jlserve.app(requirements=["torch"])
 class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def predict(self, input: Input) -> Output:
         return Output(result=input.value * 2)
@@ -368,6 +410,12 @@ class Output(BaseModel):
 
 @jlserve.app(requirements=["torch", "transformers"])
 class MyModel:
+    def setup(self) -> None:
+        pass
+
+    def download_weights(self) -> None:
+        pass
+
     @jlserve.endpoint()
     def predict(self, input: Input) -> Output:
         return Output(result=input.value * 2)
