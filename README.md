@@ -87,6 +87,13 @@ Decorator that marks a class as a JLServe app. Only one app per module/deploymen
 |-----------|-------|----------|--------------------------|
 | `name`    | `str` | No       | Custom name for the app. Defaults to class name. |
 | `requirements` | `list[str]` | No | Python dependencies to auto-install (e.g., `["torch", "transformers"]`) |
+| `gpu` | `str` | No | GPU type to deploy on, e.g. `"L4"` or `"H100"`. Default `None` (decided at deploy time). Ignored by `jlserve dev`. |
+| `gpus_per_worker` | `int` | No | GPUs attached to one worker: `1`, `2`, `4` or `8`. Default `1`. |
+| `min_workers` | `int` | No | Workers kept warm at all times, `0`–`100`. Default `0` (scale to zero). |
+| `max_workers` | `int` | No | Upper bound on workers, `0`–`100`. Must be ≥ `min_workers`; the two cannot both be `0`. Default `1`. |
+| `idle_timeout` | `int` | No | Seconds an idle worker stays up before shutdown, `0`–`86400`. Default `600`. |
+
+The deploy settings are validated when the class is decorated and stored on it; `jlserve dev` ignores them. They describe how the app should run once deployed, and are read by the deploy tooling.
 
 ### `@jlserve.endpoint()`
 
