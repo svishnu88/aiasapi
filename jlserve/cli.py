@@ -108,16 +108,19 @@ def dev(
         )
         raise typer.Exit(1)
 
+    # Print the banner only once setup() has finished, so "Serving" is never
+    # shown for a server that cannot serve yet (a model may take minutes to load).
+    def print_ready_banner() -> None:
+        typer.echo(f"\nServing {app_name} at http://localhost:{port}")
+        typer.echo(f"Docs at http://localhost:{port}/docs")
+        typer.echo(f"Health at http://localhost:{port}/health\n")
+        routes = [f"POST {m._jlserve_endpoint_path}" for m in endpoint_methods]
+        typer.echo(f"Endpoints: {', '.join(routes)}\n")
+
     # Create the FastAPI app
-    fastapi_app = create_app(app_cls)
+    fastapi_app = create_app(app_cls, on_ready=print_ready_banner)
 
-    # Print startup message
-    typer.echo(f"\nServing {app_name} at http://localhost:{port}")
-    typer.echo(f"Docs at http://localhost:{port}/docs\n")
-
-    # Print all available endpoints
-    routes = [f"POST {m._jlserve_endpoint_path}" for m in endpoint_methods]
-    typer.echo(f"Endpoints: {', '.join(routes)}\n")
+    typer.echo(f"Starting {app_name}: running setup() ...")
 
     # Start Uvicorn server
     uvicorn.run(fastapi_app, host="0.0.0.0", port=port, log_level="info")
